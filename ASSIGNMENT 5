@@ -1,0 +1,43 @@
+QUESTION 1 - FIBONACCI
+; int a = 0, b = 1;
+; for(int i=3; i<=10; i++) {
+; int c = a+b;
+; a = b;
+; b = c;
+; }
+LXI H, 2050H ; starting address from where the fibonacci series will start
+LDA 204FH ; in this location the number of terms of fibonacci series needed will be stored -> store it in D
+MOV D,A
+MVI B, 00H ; first term(a=0)
+MVI C, 01H ; second term(b=1)
+MVI A, 00H ; third term(c=0)
+LOOP: MOV M,A ; store the current term of the series in memory
+ADD C ; (c = a + b)
+MOV B,C ; (a = b)
+MOV C,A ; (b = c)
+MOV A,B ; (c = a) ; extra step to extract the next term of the series in A
+INX H ; move to next memory location
+DCR D
+JNZ LOOP
+HLT
+
+
+QUESTION 2 - FACTORIAL
+
+LXI H, 2050H
+MOV B, M
+MVI D, 01H
+LOOP: CALL MULT
+DCR B
+JNZ LOOP
+INX H
+MOV M,D
+HLT
+
+MULT: MOV E,B
+XRA A 
+LOOP2: ADD D
+DCR E
+JNZ LOOP2
+MOV D,A
+RET
