@@ -1,0 +1,74 @@
+
+; ASSIGNMENT 2
+
+; QUESTION 1
+
+
+; Addition of 2 16-bit numbers(with carry)(without using memory pointer and only 8 bit operations) : 
+; WARNING: Debugging is necessary to find out mistakes
+LDA 2050H
+MOV B,A
+LDA 2052H
+ADD B
+STA 2054H
+LDA 2051H
+MOV C,A
+LDA 2053H
+ADC C
+STA 2055H
+JC CARRY
+CARRY: 
+MVI A, 00H
+ADC A
+STA 2056H
+HLT
+
+; Addition of 2 16-bit numbers(with carry)(without using memory pointer and only 16 bit operations) : 
+LXI H, 2050H     ; HL points to the LSB of first 16-bit number (8000H and 8001H)
+LXI D, 2052H     ; DE points to the LSB of second 16-bit number (8002H and 8003H)
+
+; Add lower bytes
+LDAX D           ; Load (DE) content into Accumulator
+ADD M            ; Add (HL) content to Accumulator
+MOV C, A         ; Store result LSB into register C
+
+; Increment HL and DE to point to higher bytes
+INX H
+INX D
+
+; Add higher bytes
+LDAX D           ; Load (DE) content into Accumulator
+ADC M            ; Add (HL) content + previous carry to Accumulator
+MOV B, A         ; Store result MSB into register B
+
+; Move the result into HL pair to store
+MOV H, B
+MOV L, C
+
+; Store result 16-bit at 8050H
+SHLD 2054H       ; Store L (lower byte) at 8050H and H (higher byte) at 8051H
+
+; Check for final carry after addition
+JNC DONE         ; If no carry, jump to DONE
+
+; If carry generated, store 01H at 8052H
+MVI A, 01H       
+STA 2056H
+
+DONE:
+HLT              ; Halt the program
+
+
+
+; Addition of 2 16-bit numbers(with carry)(using memory pointer) : 
+MVI C, 00H
+LHLD 2050H
+XCHG
+LHLD 2052H
+DAD D
+JNZ SKIP
+INR C
+SKIP: SHLD 2054H
+MOV A,C
+STA 2056H
+HLT
