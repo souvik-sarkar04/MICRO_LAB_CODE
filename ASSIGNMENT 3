@@ -59,7 +59,58 @@ INX H           ; Move to next source number
 DCR C           ; Decrement counter
 JNZ EVEN_LOOP   ; If counter not zero, continue loop
 
-HLT
 
 
 HLT             ; Halt the program
+
+
+QUESTION 2
+LXI H, 2050H ; points to source
+LXI D, 205AH ; points to destination
+MVI C, 0AH ; transfer block of 10 elements
+LOOP: MOV A,M ; direct interaction with memory is done either by A or H-L pair so storing in A and storing in memory location where D-E pair is pointing is important
+STAX D
+INX H ; increase pointer of both source and destination and decrease count
+INX D
+DCR C
+JNZ LOOP
+HLT
+
+
+QUESTION 3
+; Understanding the flow of H and D before starting the loop
+; Position 1 -> H - start of source, D - start of destination
+; Position 2 -> H - end of source, D - start of destination
+; Position 3 -> H - start of destination, D - end of source
+; Position 4 -> H - end of destination, D - end of source
+; Position 5 -> H - end of source, D - end of destination
+; Logic behind 2 DAD is to first send H to the end of the source and then to the end of the destination. Logic behid 2 XCHG is to maintain the RELATIVE ORDER of H and D(H points to source block, D points to destination)
+
+LXI H, 204FH      ; Load the memory location 8000H into HL to get block size
+MOV C, M          ; Move the block size (number of elements) from memory into register C
+
+MVI B, 00H        ; Clear register B (BC will act as a 16-bit counter if needed)
+
+LXI H, 2050H      ; Load source block start address (8010H) into HL pair
+LXI D, 2055H      ; Load destination block start address (8014H) into DE pair
+
+; Adjust HL to point to the LAST element of source block
+DAD B             ; HL = HL + BC(B=00, C=Size of block -> so, effectively size of block gets added to HL) (move to end of block)
+DCX H             ; HL = HL - 1 (point exactly to last element)
+
+; Adjust DE to point to the LAST element of destination block
+XCHG              ; Exchange HL and DE (DE now holds source end)
+DAD B             ; HL = HL + BC (now HL is at end of dest block)
+DCX H             ; HL = HL - 1 (point exactly to last element)
+XCHG              ; Swap back HL <--> DE (DE = destination end, HL = source end)
+
+; Start copying elements from source to destination in reverse
+LOOP: 
+MOV A, M          ; Load the content of source memory into accumulator
+STAX D            ; Store accumulator content into destination memory
+DCX D             ; Move destination pointer one location backward
+DCX H             ; Move source pointer one location backward
+DCR C             ; Decrement the counter
+JNZ LOOP          ; If counter is not zero, continue loop
+
+HLT               ; Halt the program
