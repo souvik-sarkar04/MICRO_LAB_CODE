@@ -1,4 +1,48 @@
-    QUESTION 2
+QUESTION 1 : PRIME
+START:
+LXI H, 204EH      ; Point HL to memory location F100H (where number is stored)
+
+MOV A, M          ; Load the number into accumulator
+MVI C, 00H        ; Clear register C (to count total factors)
+MOV D, A          ; Copy number to D
+MOV E, A          ; Copy number to E (for later restoration)
+
+L2: 
+MOV B, D          ; Load B with D (current divisor)
+
+L1: 
+CMP B             ; Compare A (current dividend) with B (divisor)
+JC LABEL          ; If A < B, jump to LABEL (cannot divide further)
+
+SUB B             ; Subtract divisor B from dividend A
+JNZ L1            ; If result is not zero, continue dividing
+
+LABEL:
+CPI 00H           ; Check if result is exactly zero
+JNZ SKIP          ; If not zero, skip incrementing C
+
+INR C             ; Increment factor counter (C)
+
+SKIP:
+MOV A, E          ; Restore original number into A
+DCR D             ; Decrement D (next divisor)
+JNZ L2            ; If D ≠ 0, continue checking next divisor
+
+MOV A, C          ; After loop, load C (number of factors) into A
+CPI 02H
+JNZ NON_PRIME
+MVI A, 01H
+STA 204FH
+HLT
+
+NON_PRIME:
+MVI A,02H
+STA 204FH         ; Store result into F101H
+
+HLT               ; Halt the program
+
+
+QUESTION 2 : BINARY SEARCH
 LXI H, 204EH ; store element to be searched in B
 MOV B,M
 INX H
