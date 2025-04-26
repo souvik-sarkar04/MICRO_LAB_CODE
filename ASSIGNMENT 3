@@ -1,0 +1,65 @@
+; Question 1 another type : Total count of odd and even numbers
+LXI H, 204FH ; Store number of elements in array in C
+MOV C,M
+MVI B, 00H ; Stores number of even numbers
+MVI D, 00H ; Stores number of odd numbers
+LOOP2: INX H ; Point to the next element of array
+MOV A,M ; Put in A for ALU operation
+RAR ; if LSB = 1 -> it goes to carry -> if carry is set, we can say number is odd else even(RAL to check whether positive or negative)
+JC ODD
+INR B ; Update even numbers(if no carry)
+JMP LOOP3 ; To avoid even numbers section of code to enter ODD section and increment D(number of odd numbers)
+ODD: INR D ; Update odd numbers(if carry is set)
+LOOP3: DCR C
+JNZ LOOP2
+MOV A,B
+STA 205AH
+MOV A,D
+STA 205BH
+HLT
+
+QUESTION 1
+; Pattern states that when there are 2 TYPES of numbers in a list(array)(here, odd and even), they have to be dealt in 2 seperate loops(contrary to what we do in C, if(n%2 == 1) then odd else even -> there is no mod concept here,
+; instead MASKING OF ALL BITS WITH 0 and checking if last bit is 1 tells number is odd else it is even
+
+
+LXI H, 2050H    ; HL points to source data (start of numbers)
+LXI D, 205AH    ; DE points to destination for odd numbers
+MVI C, 10H      ; Initialize counter (50 decimal = 32H numbers)
+
+
+ODD_LOOP: 
+MOV A, M        ; Load number from memory (pointed by HL) into accumulator
+ANI 01H         ; Mask all bits except LSB to check odd/even
+JZ SKIP_ODD     ; If result is 0 (even), skip storing
+MOV A, M        ; number is odd -> Reload original number
+STAX D          ; Store number in destination memory (odd list)
+INX D           ; Increment destination pointer
+
+SKIP_ODD:
+INX H           ; Move to next source number
+DCR C           ; Decrement counter
+JNZ ODD_LOOP    ; If counter not zero, continue loop
+
+
+LXI H, 2050H    ; Reset HL to start of source data
+LXI D, 206AH    ; DE points to destination for even numbers
+MVI C, 10H      ; Reinitialize counter
+
+EVEN_LOOP:
+MOV A, M        ; Load number from memory (pointed by HL) into accumulator
+ANI 01H         ; Mask all bits except LSB
+JNZ SKIP_EVEN   ; If result is not 0 (odd), skip storing
+MOV A, M        ; number is even -> Reload original number
+STAX D          ; Store number in destination memory (even list)
+INX D           ; Increment destination pointer
+
+SKIP_EVEN:
+INX H           ; Move to next source number
+DCR C           ; Decrement counter
+JNZ EVEN_LOOP   ; If counter not zero, continue loop
+
+HLT
+
+
+HLT             ; Halt the program
