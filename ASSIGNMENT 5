@@ -24,20 +24,21 @@ HLT
 
 QUESTION 2 - FACTORIAL
 
-LXI H, 2050H
+LXI H, 2050H ; number whose factorial is to be calculated is stored in B
 MOV B, M
 MVI D, 01H
 LOOP: CALL MULT
 DCR B
 JNZ LOOP
-INX H
+INX H ; Store the result in D in the next memory location
 MOV M,D
 HLT
 
-MULT: MOV E,B
-XRA A 
-LOOP2: ADD D
+; Standard subroutine of multiplication
+MULT: MOV E,B ; current value of B(number) stored in E
+XRA A  ; A^A = 0(Clear A)
+LOOP2: ADD D ; Add value(of D) E(current number) times
 DCR E
 JNZ LOOP2
-MOV D,A
-RET
+MOV D,A ; Store the result in D
+RET ; Never forget to return from a subroutine
