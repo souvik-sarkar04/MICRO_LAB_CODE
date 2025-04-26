@@ -42,7 +42,7 @@ STA 204FH         ; Store result into F101H
 HLT               ; Halt the program
 
 
-QUESTION 2 : BINARY SEARCH
+QUESTION 2 : LINEAR SEARCH
 LXI H, 204EH ; store element to be searched in B
 MOV B,M
 INX H
