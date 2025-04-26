@@ -1,0 +1,166 @@
+1) INSERTION SORT : 
+LXI H, 2050H
+LXI D, 2050H
+MVI C, 0AH
+
+; LOOP will increment address of array element after every iterations
+
+LOOP: INX H
+
+; LOOP1 will control number of times loop is iterated(outer loop)
+
+LOOP1: DCR C
+JZ EXIT
+INR E
+
+; LOOP3 will check whether arr[i+1] > arr[i] and do the swapping(inner loop)
+
+LOOP3: MOV A,M
+DCX H
+CMP M
+JNC LOOP2
+CMC
+MOV B,M
+MOV M,A
+INX H
+MOV M,B
+DCX H
+DCX H
+MOV A,M
+INX H
+CMP M
+JNC NEXT
+CMC
+MOV H,D
+MOV L,E
+JMP LOOP
+
+NEXT: JMP LOOP3
+
+LOOP2: INX H
+JMP LOOP
+
+EXIT: HLT
+
+2) SELECTION SORT
+; Selection Sort using MIN and SWAP subroutines(descending order)
+
+
+START:
+    LXI SP, 9000H      ; Initialize stack pointer
+    LXI H, 204FH       ; Point HL to the block (starting at 8000H)
+    
+    MOV C, M           ; Get block size into C (8000H holds count)
+
+DO:
+    INX H              ; Point to first element (8001H onwards)
+    MOV A, M           ; Load current element into A
+    CALL MIN           ; Call MIN to find minimum element address
+    CMP M              ; Compare current element with minimum found
+    JZ GO              ; If same, no swap needed
+    CALL SWAP          ; Else, swap the elements
+
+GO:
+    DCR C              ; Decrement count
+    JNZ DO             ; Repeat until sorted
+    HLT                ; Halt
+
+; --- Subroutine to Find Minimum Element ---
+MIN:
+    PUSH H             ; Save HL
+    PUSH B             ; Save BC
+
+    DCR C              ; Decrease counter (as current element is already considered)
+
+LOOP:
+    INX H              ; Next element
+    CMP M              ; Compare A with next memory content
+    JNC SKIP           ; If A <= M, skip
+    MOV A, M           ; Else, update A
+    MOV D, H           ; Save address (H to D)
+    MOV E, L           ; Save address (L to E)
+
+SKIP:
+    DCR C              ; Decrement counter
+    JNZ LOOP           ; Continue loop
+
+    POP B              ; Restore BC
+    POP H              ; Restore HL
+    RET                ; Return to main program
+
+; --- Subroutine to Swap Current and Minimum Elements ---
+SWAP:
+    PUSH PSW           ; Save A and flags
+    PUSH B             ; Save BC
+
+    LDAX D             ; Load from DE
+    MOV B, A           ; Save content in B
+    MOV A, M           ; Load from HL
+    STAX D             ; Store at DE
+    MOV M, B           ; Store B at HL
+
+    POP B              ; Restore BC
+    POP PSW            ; Restore PSW
+    RET
+
+
+ASCENDING ORDER SELECTION SORT:
+; Selection Sort using MIN and SWAP subroutines(descending order)
+
+
+START:
+    LXI SP, 9000H      ; Initialize stack pointer
+    LXI H, 204FH       ; Point HL to the block (starting at 8000H)
+    
+    MOV C, M           ; Get block size into C (8000H holds count)
+
+DO:
+    INX H              ; Point to first element (8001H onwards)
+    MOV A, M           ; Load current element into A
+    CALL MIN           ; Call MIN to find minimum element address
+    CMP M              ; Compare current element with minimum found
+    JZ GO              ; If same, no swap needed
+    CALL SWAP          ; Else, swap the elements
+
+GO:
+    DCR C              ; Decrement count
+    JNZ DO             ; Repeat until sorted
+    HLT                ; Halt
+
+; --- Subroutine to Find Minimum Element ---
+MIN:
+    PUSH H             ; Save HL
+    PUSH B             ; Save BC
+
+    DCR C              ; Decrease counter (as current element is already considered)
+
+LOOP:
+    INX H              ; Next element
+    CMP M              ; Compare A with next memory content
+    JC SKIP           ; If A > M, skip
+    MOV A, M           ; Else, update A
+    MOV D, H           ; Save address (H to D)
+    MOV E, L           ; Save address (L to E)
+
+SKIP:
+    DCR C              ; Decrement counter
+    JNZ LOOP           ; Continue loop
+
+    POP B              ; Restore BC
+    POP H              ; Restore HL
+    RET                ; Return to main program
+
+; --- Subroutine to Swap Current and Minimum Elements ---
+SWAP:
+    PUSH PSW           ; Save A and flags
+    PUSH B             ; Save BC
+
+    LDAX D             ; Load from DE
+    MOV B, A           ; Save content in B
+    MOV A, M           ; Load from HL
+    STAX D             ; Store at DE
+    MOV M, B           ; Store B at HL
+
+    POP B              ; Restore BC
+    POP PSW            ; Restore PSW
+    RET
