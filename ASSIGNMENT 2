@@ -118,8 +118,41 @@ SHLD 2054H ; Store result
 MVI A, 01H    ; Move 01H into A (borrow happened)
 STA 2056H     ; Store it
 HLT
-
 NO_BORROW:
 MVI A, 00H    ; Move 00H into A (no borrow)
 STA 2056H     ; Store it
 HLT
+
+QUESTION 3
+LXI H, 204FH ; Store the number of elements in the array in C
+MOV C,M
+MVI A, 00H ; Sum
+MVI B, 00H ; Carry
+SKIP: INX H ; Point to next element of array
+ADD M ; Add it
+JNC LOOP ; No carry
+INR B ; Add the carry to B
+LOOP: DCR C ; Common step
+JNZ SKIP
+STA 205AH ; Store sum
+MOV A,B
+STA 205BH ; Store carry
+HLT
+
+
+QUESTION 4
+LXI H, 204FH ; Store the number of elements in the array in C
+MOV C,M
+INX H ; Point to the 1st element in the array
+DCR C ; First element considered so decrease C
+MOV A,M ; Store the 1st element in A(maxi = arr[0])
+SKIP: INX H ; Point to next element of array
+CMP M ; if A < M -> CMP M will set carry flag to 1(if maxi < arr[i] then maxi = arr[i])
+JNC LOOP ; no carry(no updation needed)
+MOV A,M ; carry obtained -> update A with larger number(maxi = arr[i])
+LOOP: DCR C ; common step for all loops
+JNZ SKIP
+STA 205AH
+HLT
+
+
