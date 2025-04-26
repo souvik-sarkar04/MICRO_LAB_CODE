@@ -75,3 +75,51 @@ SKIP: SHLD 2054H ; Store the result from H-L pair to 2054H
 MOV A,C ; Store carry in accumulator then to 2056H
 STA 2056H
 HLT
+
+
+QUESTION 2
+
+; Without memory pointers :
+LDA 2052H ; Load lower byte of SECOND 16-bit number in A
+MOV B,A ; Store it in B
+LDA 2050H ; Load lower byte of FIRST 16-bit number in A
+SUB B ; Calculate lower byte of RESULTANT 16-bit number in A
+STA 2054H ; Store lower byte
+LDA 2053H ; Load higher byte of SECOND 16-bit number in A
+MOV C,A ; Store it in C
+LDA 2051H ; Load higher byte of FIRST 16-bit number in A
+SBB C ; Calculate higher byte of RESULTANT 16-bit number in A(with previous borrow - SBB)
+STA 2055H ; Store it
+JNC NO_BORROW ; If no carry, jump
+
+; If carry occurred (standard technique)
+MVI A, 01H    ; Move 01H into A (borrow happened)
+STA 2056H     ; Store it
+HLT
+
+NO_BORROW:
+MVI A, 00H    ; Move 00H into A (no borrow)
+STA 2056H     ; Store it
+HLT
+
+; With memory pointers
+LHLD 2052H ; Store 2nd number in H-L pair
+XCHG ; Shift it to D-E pair
+LHLD 2050H ; Store 1st number in H-L pair
+MOV A,E 
+SUB L ; Subtract lower bytes(E-L)
+MOV L,A ; Store lower byte
+MOV A,D 
+SBB H ; Subtract higher bytes(with borrow)
+MOV H,A ; Store higher byte
+SHLD 2054H ; Store result
+
+; If carry occurred
+MVI A, 01H    ; Move 01H into A (borrow happened)
+STA 2056H     ; Store it
+HLT
+
+NO_BORROW:
+MVI A, 00H    ; Move 00H into A (no borrow)
+STA 2056H     ; Store it
+HLT
