@@ -5,27 +5,29 @@
 
 
 ; Addition of 2 16-bit numbers(with carry)(without using memory pointer and only 8 bit operations) : 
+; Link : https://youtu.be/sccJHbA6CQU?si=yEtR36JS5C25Wc3Z
 ; WARNING: Debugging is necessary to find out mistakes
-LDA 2050H
-MOV B,A
-LDA 2052H
-ADD B
-STA 2054H
-LDA 2051H
-MOV C,A
-LDA 2053H
-ADC C
-STA 2055H
+LDA 2050H  ; Load the 1st 16-bit number's LOWER byte
+MOV B,A ; B = 1st 16-bit number's LOWER byte
+LDA 2052H ; Load the 2nd 16-bit number's LOWER byte
+ADD B ; A = Resultant 16-bit number's LOWER byte
+STA 2054H ; Store resultant 16-bit number's LOWER byte
+LDA 2051H ; Load the 1st 16-bit number's HIGHER byte
+MOV C,A ; C = 1st 16-bit number's HIGHER byte
+LDA 2053H ; Load the 2nd 16-bit number's HIGHER byte
+ADC C ; A = Resultant 16-bit number's HIGHER byte(ADC to also add carry from lower byte addition)
+STA 2055H ; Store resultant 16-bit number's HIGHER byte
 JC CARRY
 CARRY: 
 MVI A, 00H
-ADC A
+ADC A ; Add FINAL carry to accumulator
 STA 2056H
 HLT
 
 ; Addition of 2 16-bit numbers(with carry)(without using memory pointer and only 16 bit operations) : 
-LXI H, 2050H     ; HL points to the LSB of first 16-bit number (8000H and 8001H)
-LXI D, 2052H     ; DE points to the LSB of second 16-bit number (8002H and 8003H)
+Link : https://www.tutorialspoint.com/8085-program-to-add-two-16-bit-numbers
+LXI H, 2050H     ; HL points to the LSB of first 16-bit number (2050H  and 2051H )
+LXI D, 2052H     ; DE points to the LSB of second 16-bit number (2052H  and 2053H)
 
 ; Add lower bytes
 LDAX D           ; Load (DE) content into Accumulator
@@ -45,13 +47,13 @@ MOV B, A         ; Store result MSB into register B
 MOV H, B
 MOV L, C
 
-; Store result 16-bit at 8050H
-SHLD 2054H       ; Store L (lower byte) at 8050H and H (higher byte) at 8051H
+; Store result 16-bit at 2054H 
+SHLD 2054H       ; Store L (lower byte) at 2054H  and H (higher byte) at 2055H 
 
 ; Check for final carry after addition
 JNC DONE         ; If no carry, jump to DONE
 
-; If carry generated, store 01H at 8052H
+; If carry generated, store 01H at 2056H 
 MVI A, 01H       
 STA 2056H
 
@@ -61,14 +63,15 @@ HLT              ; Halt the program
 
 
 ; Addition of 2 16-bit numbers(with carry)(using memory pointer) : 
-MVI C, 00H
-LHLD 2050H
-XCHG
-LHLD 2052H
-DAD D
-JNZ SKIP
-INR C
-SKIP: SHLD 2054H
-MOV A,C
+; Link : https://youtu.be/sccJHbA6CQU?si=yEtR36JS5C25Wc3Z
+MVI C, 00H ; Carry storage
+LHLD 2050H ; Load contents of 1st 16-bit number in H-L pair
+XCHG ; Exchange HL and DE pair content -> now DE has the 1st 16-bit number
+LHLD 2052H ; Load the 2nd 16-bit number in H-L pair
+DAD D ; Add content of D-E to H-L(effective addition of 2 numbers)
+JNC SKIP ; No carry
+INR C ; Carry present -> update C by 1
+SKIP: SHLD 2054H ; Store the result from H-L pair to 2054H
+MOV A,C ; Store carry in accumulator then to 2056H
 STA 2056H
 HLT
