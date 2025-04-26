@@ -1,0 +1,29 @@
+;  Without DAD
+LXI H,2050H
+MOV B,M
+MVI A,00H
+MVI D, 00H
+INX H
+MOV C,M
+LOOP2:ADD B
+JNC LOOP
+INR D
+LOOP: DCR C
+JNZ LOOP2
+STA 205AH
+MOV A,D
+STA 205BH
+HLT
+
+
+; With DAD
+LHLD 2050H ; Load number 1 in H and number 2 in L 
+XCHG; Transfer number 1 and number 2 to D-E pair
+MOV C,D ; Move number 1 to C(acts as counter)
+MVI D, 00H ; Clear D
+LXI H,0000H ; Clear H and L
+BACK: DAD D ; Add the contents of DE pair to HL pair(in DE, D = 00 and E = 2nd number, so, effectively 2nd number is added x number of times where x = 1st number(C)
+DCR C
+JNZ BACK
+SHLD 205AH
+HLT
