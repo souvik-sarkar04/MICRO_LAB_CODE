@@ -1,0 +1,18 @@
+    QUESTION 2
+LXI H, 204EH ; store element to be searched in B
+MOV B,M
+INX H
+MOV C,M ; store number of elements in array in C
+SKIP: INX H ; point to next element of array
+MOV A,M
+CMP B ; if A == B(value) -> value found -> go to LOOP(true case)
+JZ LOOP
+DCR C ; decrease counter
+JNZ SKIP
+MVI A, 02H ; loop has ended and control did not transfer to LOOP(true case) -> that means false case(element not found) -> store 02H at 2060H to signify the element has not been found
+STA 2060H
+HLT
+LOOP: ; (true case) -> store 01H at 2060H to signify the element has been found
+MVI A, 01H
+STA 2060H
+HLT
