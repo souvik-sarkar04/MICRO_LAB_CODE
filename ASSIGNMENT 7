@@ -77,30 +77,32 @@ LXI H, 204FH      ; Number of elements of array stored in C (IN-BUFFER at 204FH)
 
 MVI D, 00H        ; D register is used as a flag register (no exchanges yet)
 MOV C, M          
-DCR C             ; Decrement count (C = number of comparisons needed)
-INX H        
-; Point to first actual data (after count)
+DCR C             ; Decrement count (C = number of comparisons needed) as we are doing "INX H" -> pointing to first data so now 9 comparisons needed for 10 elements
+INX H        ; Point to first actual data (after count)
 
-CHECK:
-MOV A, M          ; Load current element into A
-INX H             ; Move to next element
+LOOP:
+MOV A, M          ; Load current element into A(arr[i])
+INX H             ; Move to next element(arr[i+1])
 CMP M             ; Compare A with next element
-JC NEXTBYT        ; If A < M, no exchange needed → jump to NEXTBYT
+JC NEXTBYT        ; If A(arr[i]) < M(arr[i+1]), no exchange needed → jump to NEXTBYT(no swap -> valid order found)
 
-; Exchange process
-MOV B, M          ; Move second element into B
-MOV M, A          ; Move first element into second location
-DCX H             ; Go back to first location
-MOV M, B          ; Move second element into first location
-INX H             ; Move forward again
-MVI D, 01H        ; Set flag D = 1 indicating an exchange occurred
+; Exchange process(swap needed as A(arr[i]) >= M(arr[i+1]))
+MOV B, M          ; Move second element into B (B = arr[i+1])
+MOV M, A          ; Move first element into second location(M is pointing to 2nd location where first element arr[i] gets inserted)
+DCX H             ; Go back to first location(M now points to the 1st location)
+MOV M, B          ; Move second element into first location(M(that points t the 1st location) now gets assigned to arr[i+1](B)) (swap successful)
+INX H             ; Move forward again(for further iterations, start memory pointer from next location)
+MVI D, 01H        ; Set flag D = 1 indicating an exchange occurred(it is a swap flag -> corresponding to the "swapped" variable of the modified bubble sort algorithm -> D=1 means swapped = true)
 
 NEXTBYT:
 DCR C             ; Decrement comparison counter
-JNZ CHECK         ; If not 0, continue comparing
+JNZ LOOP         ; If not 0, continue comparing
 
-MOV A, D          ; Move flag into accumulator
-RRC               ; Rotate flag bit into Carry
-JC START          ; If carry is set (flag=1), another pass needed
+MOV A, D          ; Move flag into accumulator(it is done to check if the rightmost bit is set -> operation easily applicable on A)
+RRC               ; Rotate flag bit into Carry(Send the rightmost bit LSB to carry)
+JC START          ; If carry is set (flag=1), another pass needed(in this case, if carry is set -> that means D was 1 in the inner "LOOP" -> that means in the course
+; of current iteration in bubble sort, there was atleast 1 swap to reorder the elements. Tallying with the modified bubble sort algorithm which terminated the outer
+; loop when swapped = false(if(swapped ==  false) break) -> in this case, if there was NO SWAP during current iteration of bubble sort, D remains 00H which means carry = 0
+; which means JC START terminates. If there is ATLEAST ONE SWAP in current iteration of bubble sort, D becomes 01H which means carry is set -> JC CARRY is valid -> OUTER LOOP starts again -> another swap starts
 
 HLT               ; Otherwise, halt (array sorted)
