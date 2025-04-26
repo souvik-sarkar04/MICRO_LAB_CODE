@@ -1,0 +1,103 @@
+1) BINARY SEARCH
+; Load key to be searched
+LDA 204FH          ; Load key into accumulator A
+MOV B, A           ; Store key into register B
+
+; Initialize
+XRA A              ; Clear accumulator
+STA 2065H             ; Store 00H at 2065H  (iteration counter)
+MOV L, A           ; Set L = 00H (lower limit)
+MVI H, 09H         ; H = 09H (upper limit, assuming 10 elements)
+
+; Start of binary search
+START:
+LDA 2065H         ; Load number of iterations into A
+INR A              ; Increment iteration counter
+STA 2065H            ; Store back to F103H
+
+MOV A, H           ; Move upper limit to A
+CMP L              ; Compare upper limit (H) with lower limit (L)
+JC  L2             ; If H < L (carry set), jump to L2 (not found)
+
+; Calculate Mid
+ADD L              ; A = H + L
+RAR                ; A = (H + L) / 2
+MOV C, A           ; Store Mid into register C
+
+; Find address of Mid element
+LXI D, 2050H       ; DE points to start of array (F110H)
+ADD E              ; A = A + E (offset by mid)
+MOV E, A           ; Update E with A
+XRA A              ; Clear accumulator
+ADC D              ; Add D and carry
+MOV D, A           ; Update D
+
+; Compare Mid element with key
+LDAX D             ; Load value at address DE into A
+CMP B              ; Compare A with key (B)
+JC ELSE            ; If mid-element < key, jump to ELSE
+JZ PRINT           ; If mid-element == key, jump to PRINT
+
+; If mid-element > key
+MOV A, C           ; Load Mid into A
+DCR A              ; Mid = Mid - 1
+MOV H, A           ; Update upper limit H
+JMP START          ; Jump to START
+
+; Mid-element < key
+ELSE:
+MOV A, C           ; Load Mid into A
+INR A              ; Mid = Mid + 1
+MOV L, A           ; Update lower limit L
+JMP START          ; Jump to START
+
+; Key found
+PRINT:
+MVI A, 01H         ; Load A with 01H (key found)
+STA 2060H          ; Store result (found) at 2060H 
+MOV A, C           ; Move Mid (index) into A
+STA 2061H          ; Store index at 2061H
+JMP END            ; Jump to END
+
+; Key not found
+L2:
+MVI A, 02H         ; Load A with 02H (key not found)
+STA 2060H          ; Store result (not found) at 2060H 
+
+; End of Program
+END:
+HLT                ; Halt
+
+
+2) BUBBLE SORT
+START:  
+LXI H, 204FH      ; Number of elements of array stored in C (IN-BUFFER at 204FH)
+
+MVI D, 00H        ; D register is used as a flag register (no exchanges yet)
+MOV C, M          
+DCR C             ; Decrement count (C = number of comparisons needed)
+INX H             ; Point to first actual data (after count)
+
+CHECK:
+MOV A, M          ; Load current element into A
+INX H             ; Move to next element
+CMP M             ; Compare A with next element
+JC NEXTBYT        ; If A < M, no exchange needed → jump to NEXTBYT
+
+; Exchange process
+MOV B, M          ; Move second element into B
+MOV M, A          ; Move first element into second location
+DCX H             ; Go back to first location
+MOV M, B          ; Move second element into first location
+INX H             ; Move forward again
+MVI D, 01H        ; Set flag D = 1 indicating an exchange occurred
+
+NEXTBYT:
+DCR C             ; Decrement comparison counter
+JNZ CHECK         ; If not 0, continue comparing
+
+MOV A, D          ; Move flag into accumulator
+RRC               ; Rotate flag bit into Carry
+JC START          ; If carry is set (flag=1), another pass needed
+
+HLT               ; Otherwise, halt (array sorted)
