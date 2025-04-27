@@ -164,3 +164,20 @@ SWAP:
     POP B              ; Restore BC
     POP PSW            ; Restore PSW
     RET
+
+3) DIVISION : 
+LXI H, 2050H ; Extract the dividend and store in B
+MOV B,M
+INX H  ;Extract the divisor and store in C
+MOV C,M
+MVI D, 00H
+MOV A,B ; Store the dividend in A
+LOOP: SUB C ; Continuously SUBTRACT the DIVISOR from the DIVIDEND until it becomes 0
+INR D ; Increase the quotient on each iteration
+CMP C ; Check if A(updated dividend) < divisor -> then carry is set -> it also means we need to terminate from the loop as our division process is complete(JNC LOOP breaks out as then carry is set)
+JNC LOOP
+STA 2053H ; Store remainder(if left)
+MOV A,D
+STA 2054H ; Store quotient
+HLT
+
