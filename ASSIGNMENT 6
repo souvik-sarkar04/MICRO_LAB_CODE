@@ -1,16 +1,17 @@
 QUESTION 1 : PRIME
 START:
-LXI H, 204EH      ; Point HL to memory location F100H (where number is stored)
+LXI H, 204EH      ; Point HL to memory location 204EH(where number is stored)
 
 MOV A, M          ; Load the number into accumulator
 MVI C, 00H        ; Clear register C (to count total factors)
-MOV D, A          ; Copy number to D
+MOV D, A          ; Copy number to D(divisor tracking from n to 1)
 MOV E, A          ; Copy number to E (for later restoration)
 
-L2: 
+L2:  ; this loop checks for all the divisors from n to 1(divisor tracked by D)
 MOV B, D          ; Load B with D (current divisor)
 
-L1: 
+L1:  ; division procedure to check if D(current divisor) is a FACTOR of the original number(in A) -> first check if updated number(in A) >= divisor -> 
+; if not, further division is not possible and jump to LABEL. But, if further division is possible, CONTINUE SUBTRACTING until updated number in A becomes 0(JNZ L1)
 CMP B             ; Compare A (current dividend) with B (divisor)
 JC LABEL          ; If A < B, jump to LABEL (cannot divide further)
 
@@ -19,24 +20,27 @@ JNZ L1            ; If result is not zero, continue dividing
 
 LABEL:
 CPI 00H           ; Check if result is exactly zero
-JNZ SKIP          ; If not zero, skip incrementing C
+JNZ SKIP          ; If not zero, skip incrementing C(In L1, if updated number (in A) is not zero, it means DIVISOR did not completely divide DIVIDEND ->
+; so, this is not a factor of the original number -> move to SKIP(avoid incrementing C as C stores the number of factors))
 
 INR C             ; Increment factor counter (C)
 
 SKIP:
-MOV A, E          ; Restore original number into A
+MOV A, E          ; Restore original number into A(later restoration)
 DCR D             ; Decrement D (next divisor)
 JNZ L2            ; If D ≠ 0, continue checking next divisor
 
 MOV A, C          ; After loop, load C (number of factors) into A
-CPI 02H
+CPI 02H            ; A = 02H -> then number is prime else non-prime
 JNZ NON_PRIME
-MVI A, 01H
+
+; Prime case :
+MVI A, 01H ; 01H depicts true value(number is prime) -> store in memory location
 STA 204FH
 HLT
 
 NON_PRIME:
-MVI A,02H
+MVI A,02H ; 02H depicts false value(number is not prime) -> store in memory location
 STA 204FH         ; Store result into F101H
 
 HLT               ; Halt the program
