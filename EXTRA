@@ -1,43 +1,59 @@
 1) INSERTION SORT : 
-LXI H, 2050H
-LXI D, 2050H
-MVI C, 0AH
+LXI H, 2050H ; H-L points to start of array in memory
+LXI D, 2050H ; D-E points to start of array in memory
+MVI C, 0AH ; C stores number of elements of array(= number of outer loop iterations)
 
-; LOOP will increment address of array element after every iterations
+; Code in C++
+; for(int i=0; i<n; i++) {
+; int j = i-1, key = arr[i];
+; while(j>=0 && arr[j] > key) {
+; arr[j+1] = arr[j]; j--;  }
+; arr[j+1] = key; }
+
+
+; LOOP will increment address of array element after every iterations as comparison with next element has to be done
 
 LOOP: INX H
 
 ; LOOP1 will control number of times loop is iterated(outer loop)
 
 LOOP1: DCR C
-JZ EXIT
-INR E
+JZ EXIT ; terminate outer loop when C(counter) = 0(forceful termination as JMP is used at last for continuing the outer LOOP)
+INR E ; E is tracking relative position (current index), so you increase it after each outer pass.
 
 ; LOOP3 will check whether arr[i+1] > arr[i] and do the swapping(inner loop)
 
-LOOP3: MOV A,M
+LOOP3: MOV A,M ; Start comparing the current element (arr[i+1]).
+DCX H ; Compare current element with the previous one(arr[i]), so move pointer backward.
+CMP M ; Check if the left element (arr[i] in M) is greater than the right element (arr[i+1] in A) -> if yes, SWAP needed(A < M -> carry is set)
+JNC LOOP2 ; no swap
+
+; Swap case :
+CMC  ; Flip the Carry flag(to KEEP CARRY 0 so that CMP M in future can alter it if required)
+MOV B,M ; Save the larger element(M) in B temporarily for swapping.
+MOV M,A ; Place the smaller element into the left position (sorted order). (Remember that due to DCX H -> now H points to ith index)
+INX H ; Move forward to right position (where swapping continues -> (i+1)th index))
+MOV M,B ; arr[i+1] gets assigned to larger element(temporarily stored in B)
+DCX H ; Now, M points to (i+1)th index but insertion sort aims at shifting the SMALLEST element to its correct position IN THE LEFT -> so, move 2 places back to (i-1)th index to compare it with ith index's element
 DCX H
-CMP M
-JNC LOOP2
+MOV A,M ; (A = arr[i-1])
+INX H ; (M points to ith index)
+CMP M ;(if A(arr[i-1]) < M(arr[i]) -> carry is set -> no swap needed)
+JNC NEXT ; carry not set -> swap needed
+
+; No swap in current iteration needed anymore -> ensure all essential registers are reset to correct values :
 CMC
-MOV B,M
-MOV M,A
-INX H
-MOV M,B
-DCX H
-DCX H
-MOV A,M
-INX H
-CMP M
-JNC NEXT
-CMC
+
+; Reload HL = DE.
+; DE always stores the starting point (base address) + current offset (E).
+; After doing internal swaps and shifts, you need to reset HL back to the right position to continue with sorting.
 MOV H,D
 MOV L,E
-JMP LOOP
+JMP LOOP ; jump back to outer loop's next iteration
 
-NEXT: JMP LOOP3
+NEXT: JMP LOOP3 ; jump back to the loop that is responsible for swapping
 
-LOOP2: INX H
+LOOP2: INX H ; Move to the next element(arr[i+1]) and move to the next iteration
 JMP LOOP
 
 EXIT: HLT
@@ -137,7 +153,7 @@ MIN:
 LOOP:
     INX H              ; Next element
     CMP M              ; Compare A with next memory content
-    JC SKIP           ; If A > M, skip
+    JC SKIP           ; If A > M, skip (only change)
     MOV A, M           ; Else, update A
     MOV D, H           ; Save address (H to D)
     MOV E, L           ; Save address (L to E)
