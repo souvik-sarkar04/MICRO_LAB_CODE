@@ -60,61 +60,75 @@ EXIT: HLT
 
 2) SELECTION SORT
 ; Selection Sort using MIN and SWAP subroutines(descending order)
+; Code in C++
+; for(int i=0; i<n-1; i++) {
+; int minIndex = i;
+; for(int j=i+1; j<n; j++) {
+; if(arr[j] < arr[minIndex]) {
+; minIndex = j;
+;break; } }
+;if(minIndex != i) swap(arr[i], arr[minIndex]); }
 
 
-START:
-    LXI SP, 9000H      ; Initialize stack pointer
-    LXI H, 204FH       ; Point HL to the block (starting at 8000H)
+
+    LXI SP, 9000H      ; Initialize stack pointer - Stack is used for CALL and PUSH/POP instructions. A safe memory region for saving registers during subroutine calls.
+
+
+    LXI H, 204FH       ; Point HL to the block (starting at 204FH )
     
-    MOV C, M           ; Get block size into C (8000H holds count)
+    MOV C, M           ; Get block size into C
 
 DO:
-    INX H              ; Point to first element (8001H onwards)
-    MOV A, M           ; Load current element into A
-    CALL MIN           ; Call MIN to find minimum element address
-    CMP M              ; Compare current element with minimum found
+    INX H              ; Point to first element (2050H onwards)
+    MOV A, M           ; Load current element into A(arr[i])
+    CALL MIN           ; Call MIN to find minimum element address(minIndex)
+    CMP M              ; Compare current element with minimum found(if(arr[i] == arr[minIndex]) -> it means arr[i] is the most minimum element and is in the correct position -> no swap needed)
     JZ GO              ; If same, no swap needed
     CALL SWAP          ; Else, swap the elements
 
-GO:
+; no swap
+GO: 
     DCR C              ; Decrement count
     JNZ DO             ; Repeat until sorted
     HLT                ; Halt
 
-; --- Subroutine to Find Minimum Element ---
 MIN:
-    PUSH H             ; Save HL
+    PUSH H             ; Save HL - SAVE ALL THOSE REGISTERS IN STACK that can be changed by subroutine
     PUSH B             ; Save BC
 
     DCR C              ; Decrease counter (as current element is already considered)
 
 LOOP:
-    INX H              ; Next element
-    CMP M              ; Compare A with next memory content
-    JNC SKIP           ; If A <= M, skip
-    MOV A, M           ; Else, update A
-    MOV D, H           ; Save address (H to D)
+    INX H              ; Next element(arr[i+1])
+    CMP M              ; Compare A with next memory content(A(arr[i]) < M(arr[i+1]) -> carry is set ->  swap needed)
+    JNC SKIP           ; If A > M, skip (only change from ascending order code) (carry not set -> skip)
+
+; Swap code :
+    MOV A, M           ; Else, update A (stores the target element(here, greater) -> A = arr[i+1])
+    MOV D, H           ; Save address (H to D) (stores the target element's address in D-E pair)
     MOV E, L           ; Save address (L to E)
 
 SKIP:
     DCR C              ; Decrement counter
     JNZ LOOP           ; Continue loop
 
+; Restore saved content of stack
     POP B              ; Restore BC
     POP H              ; Restore HL
     RET                ; Return to main program
 
 ; --- Subroutine to Swap Current and Minimum Elements ---
 SWAP:
-    PUSH PSW           ; Save A and flags
+    PUSH PSW           ; Save A and flags - SAVE ALL THOSE REGISTERS IN STACK that can be changed by subroutine
     PUSH B             ; Save BC
 
-    LDAX D             ; Load from DE
-    MOV B, A           ; Save content in B
-    MOV A, M           ; Load from HL
-    STAX D             ; Store at DE
-    MOV M, B           ; Store B at HL
+    LDAX D             ; Load from DE (target element address used to load target element)
+    MOV B, A           ; Save content in B(store target element in B)
+    MOV A, M           ; Load from HL(current element stored in A)
+    STAX D             ; Store at DE(current element stored in target element's memory address -> one half of the swap complete)
+    MOV M, B           ; Store B at HL(target element(stored in B) stored in current element's memory address(pointed by M))
 
+; Restore saved content of stack
     POP B              ; Restore BC
     POP PSW            ; Restore PSW
     RET
@@ -124,7 +138,7 @@ ASCENDING ORDER SELECTION SORT:
 ; Selection Sort using MIN and SWAP subroutines(descending order)
 
 
-START:
+
     LXI SP, 9000H      ; Initialize stack pointer
     LXI H, 204FH       ; Point HL to the block (starting at 8000H)
     
@@ -132,7 +146,7 @@ START:
 
 DO:
     INX H              ; Point to first element (8001H onwards)
-    MOV A, M           ; Load current element into A
+    MOV A, M           ; Load current element into A(arr[i])
     CALL MIN           ; Call MIN to find minimum element address
     CMP M              ; Compare current element with minimum found
     JZ GO              ; If same, no swap needed
@@ -145,15 +159,15 @@ GO:
 
 ; --- Subroutine to Find Minimum Element ---
 MIN:
-    PUSH H             ; Save HL
+    PUSH H             ; Save HL - SAVE ALL THOSE REGISTERS IN STACK that can be changed by subroutine
     PUSH B             ; Save BC
 
     DCR C              ; Decrease counter (as current element is already considered)
 
 LOOP:
-    INX H              ; Next element
-    CMP M              ; Compare A with next memory content
-    JC SKIP           ; If A > M, skip (only change)
+    INX H              ; Next element(arr[i+1])
+    CMP M              ; Compare A with next memory content(A(arr[i]) < M(arr[i+1]) -> carry is set -> no swap needed)
+    JC SKIP           ; If A < M, skip (only change from descending code)
     MOV A, M           ; Else, update A
     MOV D, H           ; Save address (H to D)
     MOV E, L           ; Save address (L to E)
